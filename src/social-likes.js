@@ -467,8 +467,17 @@
 						counterUrl: this.options.counterUrl,
 						forceUpdate: this.options.forceUpdate
 					};
+
+					var checkUrlAndUpdateCounter = (function(url) {
+						return function(number) {
+							if (url === this.options.url) {
+								this.updateCounter(number);
+							}
+						};
+					})(this.options.url);
+
 					counters.fetch(this.service, this.options.url, extraOptions)
-						.always($.proxy(this.updateCounter, this));
+						.always($.proxy(checkUrlAndUpdateCounter, this));
 				}
 			}
 		},
@@ -486,6 +495,13 @@
 			return getElementClassNames(elem, this.service);
 		},
 
+		updateCounterForUrl: function(number, url) {
+			if (this.options.url !== url) {
+				return;
+			}
+			return this.updateCounter(number);
+		},
+
 		updateCounter: function(number) {
 			number = parseInt(number, 10) || 0;
 
@@ -498,6 +514,7 @@
 				params.text = '';
 			}
 			var counterElem = $('<span>', params);
+			this.widget.find('.' + prefix + '__counter').remove();  // Remove old counter
 			this.widget.append(counterElem);
 
 			this.widget.trigger('counter.' + prefix, [this.service, number]);
